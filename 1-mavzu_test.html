@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1-mavzu — Infratuzilma iqtisodiyoti testi</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#1f2937;background:#f3f4f6}
+*{box-sizing:border-box} body{margin:0;padding:20px}
+.wrap{max-width:850px;margin:auto}.card{background:#fff;border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 2px 10px #0001}
+h1{font-size:24px;margin-top:0} .muted{color:#6b7280}.q{font-weight:700;margin-bottom:12px}
+label{display:block;border:1px solid #d1d5db;border-radius:10px;padding:11px;margin:8px 0;cursor:pointer}
+label:hover{background:#f9fafb} input[type=radio]{margin-right:9px}
+input[type=text]{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0 12px;font-size:16px}
+button{border:0;border-radius:10px;padding:13px 18px;font-size:16px;font-weight:700;cursor:pointer;background:#2563eb;color:white}
+button.secondary{background:#4b5563;margin-left:8px}.result{font-size:18px;line-height:1.7}
+.good{color:#15803d}.bad{color:#b91c1c}
+.hidden{display:none}.timer{font-size:20px;font-weight:700;text-align:center}
+.timer.danger{color:#b91c1c}.notice{padding:10px;border-radius:10px;background:#f9fafb;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="entryCard" class="card">
+<h1>Infratuzilma iqtisodiyoti — 1-mavzu</h1>
+<p><b>Mavzu:</b> Infratuzilma iqtisodiyoti fanining predmeti, usullari va nazariy asoslari</p>
+<p class="muted">Testni boshlash uchun F.I.Sh. va guruhingizni to‘liq kiriting.</p>
+<label style="border:0;padding:0"><b>F.I.Sh.</b><input id="name" type="text" placeholder="Masalan: Aliyev Aziz Anvar o‘g‘li"></label>
+<label style="border:0;padding:0"><b>Guruh</b><input id="group" type="text" placeholder="Masalan: I-123-24"></label>
+<div id="codeBox" class="hidden">
+<label style="border:0;padding:0"><b>Qayta kirish kodi</b><input id="accessCode" type="text" inputmode="numeric" placeholder="O‘qituvchi bergan kodni kiriting"></label>
+<p class="muted">Bu qurilmada test avval ishlangan. Qayta kirish uchun o‘qituvchi kodini kiriting.</p>
+</div>
+<button id="startTest" type="button">Testni boshlash</button>
+<div id="entryMessage" class="notice hidden" aria-live="polite"></div>
+</div>
+<div id="testArea" class="hidden">
+<div class="card">
+<div id="timer" class="timer">Qolgan vaqt: 10:00</div>
+<p class="muted">20 ta savol. Vaqt tugaganda test avtomatik yakunlanadi.</p>
+</div>
+<form id="quiz"></form>
+<div class="card">
+<button id="finish" type="button">Testni yakunlash</button>
+<button id="restart" type="button" class="secondary">Qayta ishlash</button>
+<div id="result" class="result" aria-live="polite"></div>
+</div>
+</div>
+</div>
+<script>
+const qs=[
+["Infratuzilma iqtisodiyoti fanining predmetini eng aniq ifodalovchi javobni aniqlang.",["Faqat ishlab chiqarish korxonalarining moliyaviy natijalarini o‘rganish","Insonlar tomonidan barpo etiladigan va o‘zaro hamkorlikni tarkiblovchi siyosiy, iqtisodiy hamda ijtimoiy me’yor va qoidalarni o‘rganish","Faqat davlat budjeti daromadlarini o‘rganish","Ishlab chiqarish texnologiyalarini texnik jihatdan baholash"],1],
+["Korxonada elektr energiyasi va internetning 24 soat uzilishi eng avvalo nimani ko‘rsatadi?",["Infratuzilmaning iqtisodiy tizim faoliyatining zarur sharti ekanini","Infratuzilma faqat davlat sektoriga xizmat qilishini","Ishlab chiqarish infratuzilmadan mustaqil ekanini","Infratuzilmaning faqat ijtimoiy vazifa bajarishini"],0],
+["Qashqadaryo va Samarqand transport infratuzilmasidagi farqlarni aniqlash uchun qaysi usul eng mos?",["Prognozlash","Ekonometrik usul","Taqqoslash","Ilmiy abstraksiya"],2],
+["2021–2025-yillarda infratuzilmaga yo‘naltirilgan investitsiyalarning yillar bo‘yicha o‘zgarishini o‘rganishda qaysi usul mos?",["Statistik tahlil","Deduksiya","Taqqoslash","Ilmiy abstraksiya"],0],
+["Investitsiyalar hajmi bilan iqtisodiy o‘sish o‘rtasidagi bog‘liqlikning miqdoriy darajasini aniqlash uchun qaysi usul tanlanadi?",["Tarixiy usul","Ekonometrik usul","Mantiqiy usul","Taqqoslash"],1],
+["2030-yilgacha infratuzilmaga bo‘lgan ehtiyojni aniqlash vazifasiga qaysi usul bevosita mos?",["Taqqoslash","Statistik guruhlash","Prognozlash","Ilmiy abstraksiya"],2],
+["Qaysi biri slaydda keltirilgan umumiy ilmiy tadqiqot usullari tarkibiga kirmaydi?",["Induksiya va deduksiya","Tahlil va sintez","Tizimli yondashuv","Ekonometrik modellashtirish"],3],
+["Infratuzilma tizimini elementlarga ajratib o‘rganib, keyin ularni yagona tizim sifatida birlashtirishda qaysi usullar qo‘llanadi?",["Induksiya va deduksiya","Tahlil va sintez","Tarixiy va mantiqiy","Taqqoslash va prognozlash"],1],
+["Slaydda infratuzilma tushunchasining iqtisodiy mohiyati qanday ifodalangan?",["Iqtisodiy tizimdan tashqaridagi mustaqil sektor","Iqtisodiy tizimning asosi, poydevori va ichki tuzilmasi","Faqat ishlab chiqarish binolari majmui","Faqat davlat moliyalashtiradigan obyektlar majmui"],1],
+["Infratuzilma iqtisodiyoti fanining vazifasi qaysi javobda to‘g‘ri ifodalangan?",["Faqat infratuzilma obyektlari sonini hisoblash","Bozor ishtirokchilari va infratuzilmalar rivojlanishi, qonuniyatlari hamda harakatlari modellarini optimallashtirish","Korxonalarning faqat ishlab chiqarish hajmini oshirish","Davlat budjeti xarajatlarini kamaytirish"],1],
+["Qaysi holat iqtisodiy o‘sishni to‘liqroq ifodalaydi?",["Faqat YIMning mutlaq ko‘payishi","Faqat aholi sonining ko‘payishi","YIMning mutlaq va aholi jon boshiga o‘sishi, resurs samaradorligi, sifat va tarkibning yaxshilanishi","Faqat davlat xarajatlarining ko‘payishi"],2],
+["Infratuzilmaning makroiqtisodiy o‘sishga bilvosita ta’siri qanday namoyon bo‘ladi?",["Faqat soliqlarni kamaytirish orqali","Ishlab chiqarish omillarini rag‘batlantirish yoki ularning samaradorligini oshirish orqali","Importni to‘liq cheklash orqali","Pul massasini ko‘paytirish orqali"],1],
+["Slaydda keltirilgan Mark Zandi fikriga ko‘ra, infratuzilmaga sarflangan har bir dollar qancha daromad keltiradi?",["1,09 dollar","1,29 dollar","1,59 dollar","2,59 dollar"],2],
+["2021–2025-yillarda besh soha orasida jami asosiy kapitalga investitsiya hajmi eng katta bo‘lgan soha qaysi?",["Transport va saqlash","Ishlab chiqarish sanoati","Axborot va aloqa","Elektr energiyasi, gaz, bug‘ va konditsiyalash"],1],
+["Besh soha ichida real o‘sish ko‘rsatkichi eng yuqori bo‘lgan soha qaysi?",["Ishlab chiqarish sanoati","Elektr energetikasi","Transport va saqlash","Axborot va aloqa"],3],
+["“Eng ko‘p investitsiya kiritilgan soha doimo eng tez o‘sadi” fikriga qaysi natija zid keladi?",["Ishlab chiqarish sanoatida 516,299 trln so‘m investitsiya va +40,9% o‘sish, axborot va aloqada 52,019 trln so‘m investitsiya va +202,8% o‘sish","Barcha sohalarda investitsiyalar mavjudligi","Transportga investitsiyalar kiritilgani","Energetikada o‘sish kuzatilgani"],0],
+["239,280 trln so‘m jami investitsiya va +52,0% real o‘sish qaysi sohaga tegishli?",["Ishlab chiqarish sanoati","Elektr energiyasi, gaz, bug‘ va konditsiyalash","Transport va saqlash","Qishloq, o‘rmon va baliqchilik xo‘jaligi"],1],
+["Transport va saqlash sohasining 2021–2025-yillardagi jami investitsiyasi va real o‘sishi qaysi?",["117,745 trln so‘m; +63,9%","122,357 trln so‘m; +21,1%","239,280 trln so‘m; +52,0%","52,019 trln so‘m; +202,8%"],0],
+["Transport, energetika, aloqa va boshqa elementlarni o‘zaro bog‘langan yagona majmua sifatida tahlil qilish qaysi yondashuvga mos?",["Tizimli yondashuv","Faqat induksiya","Faqat tarixiy usul","Ilmiy abstraksiyadan voz kechish"],0],
+["Investitsiya va real o‘sish ma’lumotlarini birgalikda tahlil qilganda qaysi xulosa ma’lumotlarga bevosita mos?",["Investitsiya va o‘sish barcha sohalarda bir xil tartibda o‘zgaradi","Eng kam investitsiya olgan soha albatta eng past o‘sishga ega","Investitsiya hajmi va real o‘sish sur’ati bo‘yicha sohalarning reytingi bir xil emas","Investitsiya real o‘sishga hech qanday aloqador emas"],2]
+];
+
+// Hozircha lokal HTML uchun o'qituvchi qayta kirish kodi.
+// Botga ulaganda bu tekshiruvni server/bot tomoniga ko'chirish kerak.
+const REENTRY_CODE = "2026";
+const USED_KEY = "infra_topic1_completed";
+let remaining = 600;
+let timerId = null;
+let finished = false;
+
+const form=document.getElementById("quiz");
+qs.forEach((q,i)=>{
+ const c=document.createElement("div"); c.className="card";
+ c.innerHTML=`<div class="q">${i+1}. ${q[0]}</div>`+
+ q[1].map((a,j)=>`<label><input type="radio" name="q${i}" value="${j}">${String.fromCharCode(65+j)}) ${a}</label>`).join("");
+ form.appendChild(c);
+});
+
+function wasUsed(){
+ try{return localStorage.getItem(USED_KEY)==="1"}catch(e){return false}
+}
+function markUsed(){
+ try{localStorage.setItem(USED_KEY,"1")}catch(e){}
+}
+function updateGate(){
+ document.getElementById("codeBox").classList.toggle("hidden",!wasUsed());
+}
+function validFullName(v){
+ return v.trim().split(/\s+/).filter(Boolean).length>=2;
+}
+function showEntry(msg){
+ const el=document.getElementById("entryMessage");
+ el.textContent=msg; el.classList.remove("hidden");
+}
+function tick(){
+ const timer=document.getElementById("timer");
+ const m=Math.floor(remaining/60), sec=remaining%60;
+ timer.textContent=`Qolgan vaqt: ${m}:${String(sec).padStart(2,"0")}`;
+ timer.classList.toggle("danger",remaining<=60);
+ if(remaining<=0){finishTest(true);return}
+ remaining--;
+}
+function startTimer(){
+ tick();
+ timerId=setInterval(tick,1000);
+}
+document.getElementById("startTest").addEventListener("click",()=>{
+ const name=document.getElementById("name").value.trim();
+ const group=document.getElementById("group").value.trim();
+ if(!validFullName(name)){showEntry("Ism va familiyangizni to‘liq kiriting.");return}
+ if(group.length<2){showEntry("Guruhingizni to‘liq kiriting.");return}
+ if(wasUsed() && document.getElementById("accessCode").value.trim()!==REENTRY_CODE){
+   showEntry("Bu test avval ishlangan. Qayta kirish kodi noto‘g‘ri.");return;
+ }
+ document.getElementById("entryCard").classList.add("hidden");
+ document.getElementById("testArea").classList.remove("hidden");
+ startTimer();
+ window.scrollTo({top:0,behavior:"smooth"});
+});
+
+function finishTest(auto=false){
+ if(finished)return;
+ const name=document.getElementById("name").value.trim(), group=document.getElementById("group").value.trim();
+ let score=0, answered=0;
+ qs.forEach((q,i)=>{const x=document.querySelector(`input[name=q${i}]:checked`);if(x){answered++;if(+x.value===q[2])score++;}});
+ if(!auto && answered<qs.length){
+   document.getElementById("result").innerHTML=`<p class="bad">${qs.length-answered} ta savol javobsiz qoldi.</p>`;
+   return;
+ }
+ finished=true;
+ if(timerId)clearInterval(timerId);
+ markUsed();
+ const pct=Math.round(score/qs.length*100);
+ const grade=pct<60?2:pct<70?3:pct<90?4:5;
+ document.querySelectorAll('input[type="radio"]').forEach(x=>x.disabled=true);
+ document.getElementById("finish").disabled=true;
+ document.getElementById("restart").classList.add("hidden");
+ document.getElementById("result").innerHTML=`<hr><p><b>${name}</b> (${group})</p>${auto?'<p class="bad"><b>Vaqt tugadi. Test avtomatik yakunlandi.</b></p>':''}<p>Natija: <b>${score}/${qs.length}</b><br>Foiz: <b>${pct}%</b><br>Baho: <b class="${grade>=3?'good':'bad'}">${grade}</b></p>`;
+ window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+document.getElementById("finish").addEventListener("click",()=>finishTest(false));
+document.getElementById("restart").addEventListener("click",()=>{ location.reload(); });
+updateGate();
+</script>
+</body></html>
