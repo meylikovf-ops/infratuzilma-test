@@ -151,7 +151,13 @@ function finishTest(auto=false){
  document.getElementById("restart").classList.add("hidden");
  document.getElementById("result").innerHTML=`<hr><p><b>${name}</b> (${group})</p>${auto?'<p class="bad"><b>Vaqt tugadi. Test avtomatik yakunlandi.</b></p>':''}<p>Natija: <b>${score}/${qs.length}</b><br>Foiz: <b>${pct}%</b><br>Baho: <b class="${grade>=3?'good':'bad'}">${grade}</b></p>`;
  const resultData={type:"quiz_result",topic:1,subject:"Infratuzilma iqtisodiyoti",name,group,score,total:qs.length,percent:pct,grade,auto_finished:auto};
- if(tg && tg.initData){try{tg.sendData(JSON.stringify(resultData));}catch(e){console.error(e);}}
+ if(tg){
+  try{
+    tg.sendData(JSON.stringify(resultData));
+  }catch(e){
+    console.error("Telegramga yuborishda xatolik:", e);
+  }
+}
  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
 }
 document.getElementById("finish").addEventListener("click",()=>finishTest(false));
